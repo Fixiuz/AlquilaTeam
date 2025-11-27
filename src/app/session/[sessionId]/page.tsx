@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { doc, collection, query, orderBy, updateDoc, arrayUnion } from 'firebase/firestore';
-import { useDoc, useCollection, useFirestore, useFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
+import { doc, collection, query, orderBy, updateDoc } from 'firebase/firestore';
+import { useDoc, useCollection, useFirestore, useFirebase, useUser, updateDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { SiteHeader } from '@/components/shared/site-header';
 import { AddListingForm } from '@/components/session/add-listing-form';
 import { ListingsGrid } from '@/components/session/listings-grid';
@@ -19,7 +19,7 @@ async function addUserToSession(firestore: any, sessionId: string, userId: strin
     const sessionRef = doc(firestore, 'sessions', sessionId);
     try {
         await updateDoc(sessionRef, {
-            members: arrayUnion(userId)
+            [`members.${userId}`]: 'member'
         });
     } catch (error) {
         console.error("Error adding user to session:", error);
@@ -38,27 +38,24 @@ export default function SessionPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
 
-  useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        initiateAnonymousSignIn(auth as Auth);
-      } else if (sessionId && firestore) {
-        const sessionRef = doc(firestore, 'sessions', sessionId);
-        const checkAndAddUser = async () => {
-          const sessionDoc = await useDoc(sessionRef);
-          if (sessionDoc.data && !sessionDoc.data.members[user.uid]) {
-             addUserToSession(firestore, sessionId, user.uid);
-          }
-        };
-        checkAndAddUser();
-      }
-    }
-  }, [user, isUserLoading, sessionId, firestore, auth]);
-
-  const sessionRef = doc(firestore, 'sessions', sessionId);
+  const sessionRef = useMemoFirebase(() => firestore ? doc(firestore, 'sessions', sessionId) : null, [firestore, sessionId]);
   const { data: session, isLoading: isSessionLoading } = useDoc(sessionRef);
 
-  const listingsQuery = query(collection(firestore, `sessions/${sessionId}/listings`), orderBy('creationDate', 'desc'));
+  useEffect(() => {
+    if (!isUserLoading && !isSessionLoading) {
+      if (!user) {
+        initiateAnonymousSignIn(auth as Auth);
+      } else if (session && user && !session.members[user.uid]) {
+         addUserToSession(firestore, sessionId, user.uid);
+      }
+    }
+  }, [user, isUserLoading, session, isSessionLoading, sessionId, firestore, auth]);
+
+  const listingsQuery = useMemoFirebase(() => 
+    firestore 
+      ? query(collection(firestore, `sessions/${sessionId}/listings`), orderBy('creationDate', 'desc'))
+      : null
+  , [firestore, sessionId]);
   const { data: listings, isLoading: areListingsLoading } = useCollection(listingsQuery);
 
   const handleTitleEdit = () => {
