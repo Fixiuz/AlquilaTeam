@@ -51,6 +51,22 @@
           "type": "string",
           "description": "URL of the rental listing."
         },
+        "title": {
+          "type": "string",
+          "description": "The title of the listing, extracted by AI."
+        },
+        "description": {
+          "type": "string",
+          "description": "A summary of the listing, extracted by AI."
+        },
+        "images": {
+          "type": "array",
+          "description": "An array of image URLs, extracted by AI.",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
         "rent": {
           "type": "number",
           "description": "Base rent amount."

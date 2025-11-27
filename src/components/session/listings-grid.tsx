@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Trash2, Pencil } from "lucide-react";
+import { ExternalLink, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WithId, useFirebase } from "@/firebase";
@@ -12,11 +13,14 @@ import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { doc } from "firebase/firestore";
 import { ListingVotes } from "./listing-votes";
 import { EditListingDialog } from './edit-listing-dialog';
-
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 interface Listing {
     sessionId: string;
     url: string;
+    title?: string;
+    description?: string;
+    images?: string[];
     rent: number;
     expenses?: number;
     agencyFee?: number;
@@ -37,10 +41,10 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
     if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Skeleton className="h-64" />
-                <Skeleton className="h-64" />
-                <Skeleton className="h-64" />
-                <Skeleton className="h-64" />
+                <Skeleton className="h-96" />
+                <Skeleton className="h-96" />
+                <Skeleton className="h-96" />
+                <Skeleton className="h-96" />
             </div>
         )
     }
@@ -63,14 +67,37 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
     return (
         <div className="space-y-4">
             <h2 className="text-2xl font-bold">Propiedades</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {listings.map((listing) => (
-                <Card key={listing.id} className="flex flex-col">
+                <Card key={listing.id} className="flex flex-col overflow-hidden">
+                    {listing.images && listing.images.length > 0 ? (
+                        <Carousel className="w-full">
+                            <CarouselContent>
+                                {listing.images.map((image, index) => (
+                                <CarouselItem key={index}>
+                                    <div className="aspect-video relative">
+                                        <Image src={image} alt={`Foto ${index + 1} de ${listing.title}`} fill style={{ objectFit: 'cover' }} />
+                                    </div>
+                                </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            {listing.images.length > 1 && (
+                                <>
+                                <CarouselPrevious className="absolute left-2" />
+                                <CarouselNext className="absolute right-2" />
+                                </>
+                            )}
+                        </Carousel>
+                    ) : (
+                         <div className="aspect-video bg-secondary flex items-center justify-center">
+                            <p className="text-muted-foreground text-sm">Sin imagen</p>
+                        </div>
+                    )}
                     <CardHeader>
                         <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg truncate flex-1 pr-2">
-                                <a href={listing.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
-                                    {new URL(listing.url).hostname.replace('www.','')} <ExternalLink className="h-4 w-4" />
+                            <CardTitle className="text-lg flex-1 pr-2">
+                                <a href={listing.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1.5">
+                                    {listing.title || new URL(listing.url).hostname.replace('www.','')} <ExternalLink className="h-4 w-4" />
                                 </a>
                             </CardTitle>
                             <div className='flex'>
@@ -83,11 +110,12 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                             </div>
                         </div>
                         <CardDescription>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2 flex-wrap">
+                            <p className="text-sm text-muted-foreground line-clamp-2">{listing.description}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 flex-wrap">
                                {listing.adjustmentFrequency && <span>Ajuste: <Badge variant="outline">{listing.adjustmentFrequency}</Badge></span>}
                                {listing.adjustmentIndex && <span>Índice: <Badge variant="outline">{listing.adjustmentIndex}</Badge></span>}
                                {listing.deposit && <span>Depósito: <Badge variant="outline">{listing.deposit}</Badge></span>}
-                               {listing.agencyFee && <span>Inmobiliaria: <Badge variant="outline">${listing.agencyFee.toLocaleString('es-AR')}</Badge></span>}
+                               {listing.agencyFee > 0 && <span>Inmobiliaria: <Badge variant="outline">${listing.agencyFee.toLocaleString('es-AR')}</Badge></span>}
                             </div>
                         </CardDescription>
                     </CardHeader>
@@ -97,7 +125,7 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                                 <p className="text-2xl font-bold">${(listing.rent + (listing.expenses || 0)).toLocaleString('es-AR')}</p>
                                 <p className="text-sm text-muted-foreground">
                                     Alquiler: ${listing.rent.toLocaleString('es-AR')}
-                                    {listing.expenses ? ` + Expensas: $${listing.expenses.toLocaleString('es-AR')}`: ''}
+                                    {listing.expenses > 0 ? ` + Expensas: $${listing.expenses.toLocaleString('es-AR')}`: ''}
                                 </p>
                             </div>
                             <Badge variant="secondary">Total Mensual</Badge>
