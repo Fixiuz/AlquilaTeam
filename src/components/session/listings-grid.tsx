@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { ExternalLink, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WithId, useFirebase } from "@/firebase";
@@ -10,6 +11,8 @@ import { ListingComments } from "./listing-comments";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { doc } from "firebase/firestore";
 import { ListingVotes } from "./listing-votes";
+import { EditListingDialog } from './edit-listing-dialog';
+
 
 interface Listing {
     sessionId: string;
@@ -29,6 +32,7 @@ interface ListingsGridProps {
 
 export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
     const { firestore } = useFirebase();
+    const [editingListing, setEditingListing] = useState<WithId<Listing> | null>(null);
     
     if (isLoading) {
         return (
@@ -69,9 +73,14 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                                     {new URL(listing.url).hostname.replace('www.','')} <ExternalLink className="h-4 w-4" />
                                 </a>
                             </CardTitle>
-                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive -mt-2 -mr-2" onClick={() => handleDelete(listing)}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className='flex'>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary -mt-2 -mr-2" onClick={() => setEditingListing(listing)}>
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive -mt-2 -mr-2" onClick={() => handleDelete(listing)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                         <CardDescription>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2 flex-wrap">
@@ -101,6 +110,17 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                 </Card>
             ))}
             </div>
+             {editingListing && (
+                <EditListingDialog 
+                    listing={editingListing} 
+                    isOpen={!!editingListing} 
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setEditingListing(null);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }
