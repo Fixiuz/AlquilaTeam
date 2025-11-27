@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThumbsUp, ThumbsDown, ExternalLink, Trash2, Info } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WithId, useFirebase } from "@/firebase";
@@ -9,6 +9,7 @@ import { Skeleton } from "../ui/skeleton";
 import { ListingComments } from "./listing-comments";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { doc } from "firebase/firestore";
+import { ListingVotes } from "./listing-votes";
 
 interface Listing {
     sessionId: string;
@@ -65,7 +66,7 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                         <div className="flex justify-between items-start">
                             <CardTitle className="text-lg truncate flex-1 pr-2">
                                 <a href={listing.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
-                                    {listing.url} <ExternalLink className="h-4 w-4" />
+                                    {new URL(listing.url).hostname.replace('www.','')} <ExternalLink className="h-4 w-4" />
                                 </a>
                             </CardTitle>
                             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive -mt-2 -mr-2" onClick={() => handleDelete(listing)}>
@@ -94,12 +95,7 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                         </div>
                     </CardContent>
                     <CardFooter className="flex-col items-start gap-4">
-                        <div className="flex justify-between w-full">
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm"><ThumbsUp className="h-4 w-4 mr-1" /> 0</Button>
-                                <Button variant="outline" size="sm"><ThumbsDown className="h-4 w-4 mr-1" /> 0</Button>
-                            </div>
-                        </div>
+                        <ListingVotes listing={listing} />
                         <ListingComments listing={listing} />
                     </CardFooter>
                 </Card>
