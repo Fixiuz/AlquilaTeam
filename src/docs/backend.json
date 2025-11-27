@@ -1,0 +1,273 @@
+{
+  "entities": {
+    "Session": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Session",
+      "type": "object",
+      "description": "Represents a rental session for a group of friends.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Session entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the session, given by the creator."
+        },
+        "creationDate": {
+          "type": "string",
+          "description": "Date and time when the session was created.",
+          "format": "date-time"
+        },
+        "listingIds": {
+          "type": "array",
+          "description": "References to Listings. (Relationship: Session 1:N Listing)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "creationDate"
+      ]
+    },
+    "Listing": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Listing",
+      "type": "object",
+      "description": "Represents a single rental listing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Listing entity."
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Reference to Session. (Relationship: Session 1:N Listing)"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the rental listing."
+        },
+        "rent": {
+          "type": "number",
+          "description": "Base rent amount."
+        },
+        "expenses": {
+          "type": "number",
+          "description": "Monthly expenses associated with the rental."
+        },
+        "agencyFee": {
+          "type": "number",
+          "description": "Real estate agency fee."
+        },
+        "deposit": {
+          "type": "string",
+          "description": "Deposit requirements (e.g., amount, promissory note)."
+        },
+        "adjustmentFrequency": {
+          "type": "string",
+          "description": "Frequency of rent adjustments.",
+          "enum": [
+            "trimestral",
+            "cuatrimestral",
+            "semestral"
+          ]
+        },
+        "adjustmentIndex": {
+          "type": "string",
+          "description": "Index used for rent adjustments.",
+          "enum": [
+            "IPC",
+            "ICL"
+          ]
+        },
+        "commentIds": {
+          "type": "array",
+          "description": "References to Comments. (Relationship: Listing 1:N Comment)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "voteIds": {
+          "type": "array",
+          "description": "References to Votes. (Relationship: Listing 1:N Vote)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "sessionId",
+        "url",
+        "rent"
+      ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment on a rental listing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Comment entity."
+        },
+        "listingId": {
+          "type": "string",
+          "description": "Reference to Listing. (Relationship: Listing 1:N Comment)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the comment."
+        },
+        "author": {
+          "type": "string",
+          "description": "The author of the comment, can be an anonymous ID."
+        },
+        "creationDate": {
+          "type": "string",
+          "description": "Date and time when the comment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "listingId",
+        "text",
+        "creationDate",
+        "author"
+      ]
+    },
+    "Vote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vote",
+      "type": "object",
+      "description": "Represents a vote for a rental listing.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Vote entity."
+        },
+        "listingId": {
+          "type": "string",
+          "description": "Reference to Listing. (Relationship: Listing 1:N Vote)"
+        },
+        "value": {
+          "type": "number",
+          "description": "The value of the vote (e.g., 1 for upvote, -1 for downvote)."
+        },
+        "creationDate": {
+          "type": "string",
+          "description": "Date and time when the vote was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "listingId",
+        "value",
+        "creationDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "sessions/{sessionId}",
+        "definition": {
+          "entityName": "Session",
+          "schema": {
+            "$ref": "#/backend/entities/Session"
+          },
+          "description": "Represents a rental session. Includes denormalized 'members' map (if collaboration features are implemented in the future) for authorization independence.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique identifier for the session."
+            }
+          ]
+        }
+      },
+      {
+        "path": "sessions/{sessionId}/listings/{listingId}",
+        "definition": {
+          "entityName": "Listing",
+          "schema": {
+            "$ref": "#/backend/entities/Listing"
+          },
+          "description": "Represents a rental listing within a session. Includes denormalized 'sessionId' for authorization independence.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique identifier for the session."
+            },
+            {
+              "name": "listingId",
+              "description": "The unique identifier for the listing."
+            }
+          ]
+        }
+      },
+      {
+        "path": "sessions/{sessionId}/listings/{listingId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Represents a comment on a rental listing. Includes denormalized 'sessionId' and 'listingId' for authorization independence.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique identifier for the session."
+            },
+            {
+              "name": "listingId",
+              "description": "The unique identifier for the listing."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique identifier for the comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "sessions/{sessionId}/listings/{listingId}/votes/{voteId}",
+        "definition": {
+          "entityName": "Vote",
+          "schema": {
+            "$ref": "#/backend/entities/Vote"
+          },
+          "description": "Represents a vote on a rental listing. Includes denormalized 'sessionId' and 'listingId' for authorization independence.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique identifier for the session."
+            },
+            {
+              "name": "listingId",
+              "description": "The unique identifier for the listing."
+            },
+            {
+              "name": "voteId",
+              "description": "The unique identifier for the vote."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the AlquilaTeam application, prioritizing authorization independence, clarity, and scalability. It leverages denormalization, structural segregation, and consistent access modeling to achieve these goals.\n\n**Authorization Independence:**\n\n*   The `sessions/{sessionId}/listings/{listingId}` and its subcollections `comments` and `votes` denormalize the `sessionId` to eliminate the need for `get()` calls to the parent `session` document in the security rules. This allows for atomic operations (transactions/batches) and simplifies security rule logic.\n\n*   The `sessions/{sessionId}` document could also denormalize a `members` map, containing user IDs as keys and roles (e.g., \"owner\", \"viewer\") as values if collaborative features that require role-based access control are desired in the future. This would further ensure authorization independence for session-level operations.\n\n**Structural Segregation:**\n\n*   The structure segregates data based on ownership and access requirements. Session data and related listing, comments, and votes are contained within the `sessions/{sessionId}` path. This allows for a clear and consistent security posture for all documents within that session.\n\n**Access Modeling:**\n\n*   The structure uses path-based ownership for session data (`sessions/{sessionId}`). In a future enhancement, the session document could include a `ownerId` field or a `members` map to specify session ownership and control access. This simplifies security rules for session creation, modification, and deletion.\n\n**QAPs (Rules are not Filters):**\n\n*   The segregation of data into session-specific collections (`sessions/{sessionId}/listings/{listingId}`) enables secure `list` operations. Security rules can easily enforce that a user can only `list` listings within a session they have access to (either as the owner or a member, depending on future collaboration features). The denormalized `sessionId` in the `listings` and its subcollections ensures efficient and secure querying within a specific session.\n\n**Invariants:**\n\n*   The structure supports invariants by allowing security rules to enforce data integrity constraints, such as ensuring that the `sessionId` in `listings` matches the `sessionId` in the path. Timestamps can be enforced using server timestamps and security rules to prevent client-side manipulation.\n\nThis design promotes secure, scalable, and debuggable Firestore rules by minimizing hierarchical dependencies and making authorization intent explicit through structural choices and denormalization."
+  }
+}
+    

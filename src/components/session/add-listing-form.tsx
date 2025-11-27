@@ -18,11 +18,16 @@ import { useFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const listingSchema = z.object({
   url: z.string().url({ message: 'Por favor, ingresá una URL válida.' }),
   rent: z.coerce.number().positive({ message: 'El alquiler debe ser un número positivo.' }),
   expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional(),
+  agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional(),
+  deposit: z.string().optional(),
+  adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral']).optional(),
+  adjustmentIndex: z.enum(['IPC', 'ICL']).optional(),
 });
 
 type ListingFormValues = z.infer<typeof listingSchema>;
@@ -41,6 +46,8 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
       url: '',
       rent: 0,
       expenses: 0,
+      agencyFee: 0,
+      deposit: '',
     },
   });
 
@@ -79,32 +86,107 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="rent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Alquiler (ARS)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="250000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="expenses"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expensas (ARS)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="50000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="rent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alquiler (ARS)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="250000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="expenses"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expensas (ARS)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="50000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="agencyFee"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Costo Inmobiliaria</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="400000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="deposit"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Depósito / Pagaré</FormLabel>
+                        <FormControl>
+                            <Input placeholder="1 mes / Pagaré" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="adjustmentFrequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ajuste</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Frecuencia" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="trimestral">Trimestral</SelectItem>
+                        <SelectItem value="cuatrimestral">Cuatrimestral</SelectItem>
+                        <SelectItem value="semestral">Semestral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="adjustmentIndex"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Índice</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Índice" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ICL">ICL</SelectItem>
+                        <SelectItem value="IPC">IPC</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <Button type="submit" className="w-full">Agregar</Button>
           </form>
         </Form>
@@ -112,3 +194,4 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
     </Card>
   );
 }
+    

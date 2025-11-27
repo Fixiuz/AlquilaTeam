@@ -1,8 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection, query, orderBy } from 'firebase/firestore';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { SiteHeader } from '@/components/shared/site-header';
 import { AddListingForm } from '@/components/session/add-listing-form';
@@ -21,7 +20,7 @@ export default function SessionPage() {
   const { data: session, isLoading: isSessionLoading } = useDoc(sessionRef);
 
   const listingsQuery = useMemoFirebase(() =>
-    firestore && sessionId ? query(collection(firestore, `sessions/${sessionId}/listings`)) : null
+    firestore && sessionId ? query(collection(firestore, `sessions/${sessionId}/listings`), orderBy('creationDate', 'desc')) : null
   , [firestore, sessionId]);
 
   const { data: listings, isLoading: areListingsLoading } = useCollection(listingsQuery);
@@ -42,11 +41,11 @@ export default function SessionPage() {
             <h1 className="text-3xl font-bold">{session.name}</h1>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-1">
                 <AddListingForm sessionId={sessionId} />
             </div>
-            <div className="md:col-span-2">
+            <div className="lg:col-span-2">
                 <ListingsGrid listings={listings || []} isLoading={areListingsLoading} />
             </div>
         </div>
@@ -54,3 +53,4 @@ export default function SessionPage() {
     </div>
   );
 }
+    
