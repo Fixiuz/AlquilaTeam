@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "dashboard-showcase",
+      "description": "A mock-up of the AlquilaTeam shared dashboard interface showing rental listings in columns.",
+      "imageUrl": "https://images.unsplash.com/photo-1634807010323-4309f645e5a4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkYXNoYm9hcmQlMjBpbnRlcmZhY2V8ZW58MHx8fHwxNzY0MjE5NzM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dashboard interface"
+    }
+  ]
 }
