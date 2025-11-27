@@ -84,7 +84,7 @@ service cloud.firestore {
     match /sessions/{sessionId} {
       allow get, list: if isSessionMember(sessionId);
       allow create: if isSignedIn() && isNewSessionOwner();
-      allow update: if isExistingSessionOwner();
+      allow update: if isExistingSessionOwner() || (isSignedIn() && request.auth.uid in request.resource.data.members);
       allow delete: if isExistingSessionOwner();
     }
 
