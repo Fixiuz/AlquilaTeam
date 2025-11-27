@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,8 +19,6 @@ import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { extractListingInfo } from '@/ai/flows/extract-listing-info-flow';
-import { Loader2 } from 'lucide-react';
 
 const listingSchema = z.object({
   url: z.string().url({ message: 'Por favor, ingresá una URL válida.' }),
@@ -42,7 +39,6 @@ interface AddListingFormProps {
 export function AddListingForm({ sessionId }: AddListingFormProps) {
   const { firestore } = useFirebase();
   const { toast } = useToast();
-  const [isExtracting, setIsExtracting] = useState(false);
 
   const form = useForm<ListingFormValues>({
     resolver: zodResolver(listingSchema),
@@ -55,40 +51,22 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
     },
   });
 
-  const onSubmit = async (data: ListingFormValues) => {
+  const onSubmit = (data: ListingFormValues) => {
     if (!firestore) return;
 
-    setIsExtracting(true);
-    try {
-      const extractedData = await extractListingInfo({ url: data.url });
-
-      const listingsCollection = collection(firestore, `sessions/${sessionId}/listings`);
-      addDocumentNonBlocking(listingsCollection, {
+    const listingsCollection = collection(firestore, `sessions/${sessionId}/listings`);
+    addDocumentNonBlocking(listingsCollection, {
         ...data,
-        ...extractedData,
         sessionId,
         creationDate: new Date().toISOString()
-      });
-      
-      toast({
-        title: "Propiedad agregada!",
-        description: "La nueva propiedad fue añadida a la lista.",
-      });
+    });
+    
+    toast({
+      title: "Propiedad agregada!",
+      description: "La nueva propiedad fue añadida a la lista.",
+    });
 
-      form.reset();
-    } catch (error) {
-      console.error("Error extracting listing info:", error);
-      toast({
-        variant: "destructive",
-        title: "Error al extraer datos",
-        description: "No se pudo obtener la información de la URL. Por favor, agregá los datos manualmente.",
-      });
-      // Fallback to manual add if AI fails
-      const listingsCollection = collection(firestore, `sessions/${sessionId}/listings`);
-      addDocumentNonBlocking(listingsCollection, { ...data, sessionId, creationDate: new Date().toISOString() });
-    } finally {
-      setIsExtracting(false);
-    }
+    form.reset();
   };
 
   return (
@@ -213,9 +191,8 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
                 )}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isExtracting}>
-              {isExtracting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isExtracting ? 'Analizando link...' : 'Agregar'}
+            <Button type="submit" className="w-full">
+              Agregar
             </Button>
           </form>
         </Form>

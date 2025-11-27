@@ -51,22 +51,6 @@
           "type": "string",
           "description": "URL of the rental listing."
         },
-        "title": {
-          "type": "string",
-          "description": "The title of the listing, extracted by AI."
-        },
-        "description": {
-          "type": "string",
-          "description": "A summary of the listing, extracted by AI."
-        },
-        "images": {
-          "type": "array",
-          "description": "An array of image URLs, extracted by AI.",
-          "items": {
-            "type": "string",
-            "format": "uri"
-          }
-        },
         "rent": {
           "type": "number",
           "description": "Base rent amount."
@@ -75,30 +59,13 @@
           "type": "number",
           "description": "Monthly expenses associated with the rental."
         },
-        "agencyFee": {
-          "type": "number",
-          "description": "Real estate agency fee."
-        },
-        "deposit": {
+        "adjustmentType": {
           "type": "string",
-          "description": "Deposit requirements (e.g., amount, promissory note)."
+          "description": "Type of rent adjustment (e.g., ICL, IPC)."
         },
         "adjustmentFrequency": {
           "type": "string",
-          "description": "Frequency of rent adjustments.",
-          "enum": [
-            "trimestral",
-            "cuatrimestral",
-            "semestral"
-          ]
-        },
-        "adjustmentIndex": {
-          "type": "string",
-          "description": "Index used for rent adjustments.",
-          "enum": [
-            "IPC",
-            "ICL"
-          ]
+          "description": "Frequency of rent adjustments (e.g., monthly, annually)."
         },
         "commentIds": {
           "type": "array",
@@ -140,10 +107,6 @@
           "type": "string",
           "description": "The text content of the comment."
         },
-        "author": {
-          "type": "string",
-          "description": "The author of the comment, can be an anonymous ID."
-        },
         "creationDate": {
           "type": "string",
           "description": "Date and time when the comment was created.",
@@ -154,8 +117,7 @@
         "id",
         "listingId",
         "text",
-        "creationDate",
-        "author"
+        "creationDate"
       ]
     },
     "Vote": {
@@ -172,13 +134,9 @@
           "type": "string",
           "description": "Reference to Listing. (Relationship: Listing 1:N Vote)"
         },
-        "userId": {
-          "type": "string",
-          "description": "The ID of the user who cast the vote."
-        },
         "value": {
           "type": "number",
-          "description": "The value of the vote (1 for upvote, -1 for downvote)."
+          "description": "The value of the vote (e.g., 1 for upvote, -1 for downvote)."
         },
         "creationDate": {
           "type": "string",
@@ -189,7 +147,6 @@
       "required": [
         "id",
         "listingId",
-        "userId",
         "value",
         "creationDate"
       ]
@@ -291,4 +248,3 @@
     "reasoning": "The Firestore structure is designed to support the AlquilaTeam application, prioritizing authorization independence, clarity, and scalability. It leverages denormalization, structural segregation, and consistent access modeling to achieve these goals.\n\n**Authorization Independence:**\n\n*   The `sessions/{sessionId}/listings/{listingId}` and its subcollections `comments` and `votes` denormalize the `sessionId` to eliminate the need for `get()` calls to the parent `session` document in the security rules. This allows for atomic operations (transactions/batches) and simplifies security rule logic.\n\n*   The `sessions/{sessionId}` document could also denormalize a `members` map, containing user IDs as keys and roles (e.g., \"owner\", \"viewer\") as values if collaborative features that require role-based access control are desired in the future. This would further ensure authorization independence for session-level operations.\n\n**Structural Segregation:**\n\n*   The structure segregates data based on ownership and access requirements. Session data and related listing, comments, and votes are contained within the `sessions/{sessionId}` path. This allows for a clear and consistent security posture for all documents within that session.\n\n**Access Modeling:**\n\n*   The structure uses path-based ownership for session data (`sessions/{sessionId}`). In a future enhancement, the session document could include a `ownerId` field or a `members` map to specify session ownership and control access. This simplifies security rules for session creation, modification, and deletion.\n\n**QAPs (Rules are not Filters):**\n\n*   The segregation of data into session-specific collections (`sessions/{sessionId}/listings/{listingId}`) enables secure `list` operations. Security rules can easily enforce that a user can only `list` listings within a session they have access to (either as the owner or a member, depending on future collaboration features). The denormalized `sessionId` in the `listings` and its subcollections ensures efficient and secure querying within a specific session.\n\n**Invariants:**\n\n*   The structure supports invariants by allowing security rules to enforce data integrity constraints, such as ensuring that the `sessionId` in `listings` matches the `sessionId` in the path. Timestamps can be enforced using server timestamps and security rules to prevent client-side manipulation.\n\nThis design promotes secure, scalable, and debuggable Firestore rules by minimizing hierarchical dependencies and making authorization intent explicit through structural choices and denormalization."
   }
 }
-    
