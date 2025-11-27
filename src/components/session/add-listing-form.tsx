@@ -18,7 +18,7 @@ import { useFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const listingSchema = z.object({
   url: z.string().url({ message: 'Por favor, ingresá una URL válida.' }),
@@ -55,11 +55,7 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
     if (!firestore) return;
 
     const listingsCollection = collection(firestore, `sessions/${sessionId}/listings`);
-    addDocumentNonBlocking(listingsCollection, {
-        ...data,
-        sessionId,
-        creationDate: new Date().toISOString()
-    });
+    addDocumentNonBlocking(listingsCollection, { ...data, sessionId, creationDate: new Date().toISOString() });
     
     toast({
       title: "Propiedad agregada!",
@@ -179,7 +175,7 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Índice" />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="ICL">ICL</SelectItem>
@@ -191,12 +187,11 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
                 )}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Agregar
-            </Button>
+            <Button type="submit" className="w-full">Agregar</Button>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
 }
+  
