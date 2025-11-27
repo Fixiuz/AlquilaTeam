@@ -26,7 +26,7 @@ async function addUserToSession(firestore: any, sessionId: string, userId: strin
         console.error("Error adding user to session:", error);
         // This might fail if rules don't allow it, so we check access again.
         const updatedSession = await getDoc(sessionRef);
-        return updatedSession.exists() && updatedSession.data().members[userId];
+        return updatedSession.exists() && updatedSession.data()!.members[userId];
     }
 }
 
@@ -71,6 +71,9 @@ export default function SessionPage() {
                 const success = await addUserToSession(firestore, sessionId, user.uid);
                 if (success) {
                     setIsReadyToFetch(true);
+                } else {
+                    // Could not add user to session, permission issue.
+                    console.error("Failed to add user to the session due to permissions.");
                 }
             }
         } else {
@@ -86,12 +89,12 @@ export default function SessionPage() {
 
   // Data fetching hooks will only run when isReadyToFetch is true
   const sessionRef = useMemoFirebase(() => 
-    isReadyToFetch && firestore ? doc(firestore, 'sessions', sessionId) : null
+    isReadyToFetch ? doc(firestore, 'sessions', sessionId) : null
   , [isReadyToFetch, firestore, sessionId]);
   const { data: session, isLoading: isSessionLoading } = useDoc(sessionRef);
 
   const listingsQuery = useMemoFirebase(() => 
-    isReadyToFetch && firestore 
+    isReadyToFetch 
       ? query(collection(firestore, `sessions/${sessionId}/listings`), orderBy('creationDate', 'desc'))
       : null
   , [isReadyToFetch, firestore, sessionId]);
