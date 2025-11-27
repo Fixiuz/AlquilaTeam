@@ -9,14 +9,16 @@ import { AddListingForm } from '@/components/session/add-listing-form';
 import { ListingsGrid } from '@/components/session/listings-grid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil, Check, X } from 'lucide-react';
+import { Pencil, Check, X, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { isCopied, copyToClipboard } = useCopyToClipboard();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -55,19 +57,27 @@ export default function SessionPage() {
     setIsEditingTitle(false);
   };
 
+  const handleShare = () => {
+    copyToClipboard(window.location.href);
+    toast({
+      title: "¡Enlace copiado!",
+      description: "Ya podés compartir el link con tus amigos.",
+    });
+  }
+
   if (isSessionLoading) {
     return <div>Cargando sesión...</div>;
   }
 
   if (!session) {
-    return <div>Sesión no encontrada.</div>;
+    return <div>Sesión no encontrada o no tenés permiso para verla.</div>;
   }
 
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-1 container py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
             <div className="flex items-center gap-2">
               {isEditingTitle ? (
                 <div className="flex items-center gap-2">
@@ -89,6 +99,10 @@ export default function SessionPage() {
                 </>
               )}
             </div>
+            <Button onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
+              {isCopied ? '¡Copiado!' : 'Compartir Sesión'}
+            </Button>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
