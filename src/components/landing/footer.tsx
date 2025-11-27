@@ -21,21 +21,21 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="https://github.com/FirebaseExtended/studio-samples/issues/new?template=bug_report.md" target="_blank">
+              <Link href="https://github.com/Fixiuz/AlquilaTeam/issues/new?template=bug_report.md" target="_blank">
                 <Bug className="h-4 w-4 mr-2" />
                 Reportar un bug
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="https://github.com/FirebaseExtended/studio-samples/tree/main/templates/nextjs-shadcn-genkit-firestore" target="_blank">
+              <Link href="https://github.com/Fixiuz/AlquilaTeam" target="_blank">
                 <Code className="h-4 w-4 mr-2" />
                 Contribuir al Código
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="https://github.com/FirebaseExtended/studio-samples/blob/main/LICENSE" target="_blank">
+              <Link href="https://github.com/Fixiuz/AlquilaTeam/blob/main/LICENSE" target="_blank">
                 <FileText className="h-4 w-4 mr-2" />
-                Licencia MIT
+                Licencia
               </Link>
             </Button>
           </div>

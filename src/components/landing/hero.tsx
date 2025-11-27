@@ -60,7 +60,7 @@ export function Hero() {
       <div className="flex w-full items-center justify-center space-x-4">
         <Button size="lg" onClick={handleCreateSession}>Crear Nueva Sesión</Button>
         <Button variant="outline" size="lg" asChild>
-          <Link href="https://github.com/FirebaseExtended/studio-samples/tree/main/templates/nextjs-shadcn-genkit-firestore" target="_blank" rel="noreferrer">
+          <Link href="https://github.com/Fixiuz/AlquilaTeam" target="_blank" rel="noreferrer">
             <Github className="mr-2 h-5 w-5" />
             Ver en GitHub
           </Link>
