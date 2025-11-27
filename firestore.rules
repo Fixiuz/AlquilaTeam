@@ -1,0 +1,133 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict, collaborative security model centered around "Sessions". 
+ * All data access is contingent on a user's membership within a specific session. This ensures that all listings, 
+ * comments, and votes are private to the group of users participating in that session.
+ *
+ * Data Structure: The data is organized hierarchically under the `/sessions/{sessionId}` collection. Each 
+ * session document acts as the root for its own data tree, containing subcollections for `listings`, which in 
+ * turn contain `comments` and `votes`. This structural segregation ensures that security rules applied at the 
+ * session level can be easily inherited by all related data.
+ *
+ * Key Security Decisions:
+ * - Closed Collaboration Model: By default, no data is public. A user must be an explicit member of a session 
+ *   to read or write any data within it.
+ * - Role-Based Session Management: Access is controlled by a 'members' map on each session document. This map 
+ *   assigns roles (e.g., 'owner', 'member') to user UIDs. Only the 'owner' can modify the session document itself 
+ *   (e.g., to add new members) or delete the session.
+ * - Uniform Member Permissions: All members of a session (including the owner) are granted equal permissions 
+ *   to create, read, update, and delete content (listings, comments, votes) within that session's data tree.
+ *
+ * Denormalization for Authorization: To enable this security model, each `/sessions/{sessionId}` document MUST 
+ * contain a `members` map. For example: `members: { 'user_abc': 'owner', 'user_xyz': 'member' }`. This denormalization 
+ * is critical, as it allows security rules for nested documents (like a comment) to securely and efficiently check 
+ * a user's session membership with a single `get()` call to the parent session document, avoiding slow or 
+ * impossible queries.
+ *
+ * Structural Segregation: The entire data model is partitioned by session ID. This design is inherently secure 
+ * for list operations, as queries can be tightly scoped to a specific session path, and the rules can then 
+ * verify membership for that specific session.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions to abstract and reuse common security logic.
+    
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Retrieves the session document data. Used to check membership.
+     * @param sessionId The ID of the session document to fetch.
+     */
+    function getSession(sessionId) {
+      return get(/databases/$(database)/documents/sessions/$(sessionId));
+    }
+
+    /**
+     * Checks if the currently authenticated user is listed in the session's 'members' map.
+     * This is the primary gatekeeper for all access within a session's data tree.
+     * @param sessionId The ID of the session to check against.
+     */
+    function isSessionMember(sessionId) {
+      return isSignedIn() && request.auth.uid in getSession(sessionId).data.members;
+    }
+
+    /**
+     * Validates that a user creating a new session is assigning themselves as the sole owner.
+     * This prevents users from creating sessions owned by others or adding members during creation.
+     */
+    function isNewSessionOwner() {
+      let data = request.resource.data;
+      return data.members[request.auth.uid] == 'owner' && data.members.size() == 1;
+    }
+
+    /**
+     * Validates that the user modifying or deleting an existing session document is its owner.
+     * Checks the data that is already stored in Firestore, not the incoming data.
+     */
+    function isExistingSessionOwner() {
+      return resource != null && isSignedIn() && resource.data.members[request.auth.uid] == 'owner';
+    }
+
+    /**
+     * @description Controls access to Session documents. A session is the root of a collaborative space.
+     * @path /sessions/{sessionId}
+     * @allow (get) A user who is a member of the session `(auth.uid in resource.data.members)`.
+     * @deny (create) An anonymous user, or a user trying to create a session owned by someone else.
+     * @principle Enforces a role-based model where an 'owner' manages the session and 'members' can view it.
+     */
+    match /sessions/{sessionId} {
+      allow get, list: if isSessionMember(sessionId);
+      allow create: if isSignedIn() && isNewSessionOwner();
+      allow update: if isExistingSessionOwner();
+      allow delete: if isExistingSessionOwner();
+    }
+
+    /**
+     * @description Controls access to Listings within a session.
+     * @path /sessions/{sessionId}/listings/{listingId}
+     * @allow (create) A member of the session creating a new listing.
+     * @deny (get) A user who is not a member of the parent session.
+     * @principle Inherits access rights from the parent session, granting all members CRUD permissions.
+     */
+    match /sessions/{sessionId}/listings/{listingId} {
+      allow get, list: if isSessionMember(sessionId);
+      allow create: if isSessionMember(sessionId) && request.resource.data.sessionId == sessionId;
+      allow update: if isSessionMember(sessionId) && resource.data.sessionId == sessionId;
+      allow delete: if isSessionMember(sessionId);
+    }
+
+    /**
+     * @description Controls access to Comments on a listing.
+     * @path /sessions/{sessionId}/listings/{listingId}/comments/{commentId}
+     * @allow (update) Any member of the session updating any comment on a listing in that session.
+     * @deny (create) A user creating a comment but not providing a valid `listingId`.
+     * @principle Inherits access rights from the parent session, allowing free collaboration on comments.
+     */
+    match /sessions/{sessionId}/listings/{listingId}/comments/{commentId} {
+      allow get, list: if isSessionMember(sessionId);
+      allow create: if isSessionMember(sessionId) && request.resource.data.listingId == listingId;
+      allow update: if isSessionMember(sessionId) && resource.data.listingId == listingId;
+      allow delete: if isSessionMember(sessionId);
+    }
+
+    /**
+     * @description Controls access to Votes on a listing.
+     * @path /sessions/{sessionId}/listings/{listingId}/votes/{voteId}
+     * @allow (delete) Any member of the session deleting any vote on a listing in that session.
+     * @deny (list) A user who is not part of the session attempting to list votes.
+     * @principle Inherits access rights from the parent session, allowing free collaboration on votes.
+     */
+    match /sessions/{sessionId}/listings/{listingId}/votes/{voteId} {
+      allow get, list: if isSessionMember(sessionId);
+      allow create: if isSessionMember(sessionId) && request.resource.data.listingId == listingId;
+      allow update: if isSessionMember(sessionId) && resource.data.listingId == listingId;
+      allow delete: if isSessionMember(sessionId);
+    }
+  }
+}
