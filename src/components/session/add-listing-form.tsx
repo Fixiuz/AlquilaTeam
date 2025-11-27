@@ -19,7 +19,7 @@ import { useFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { extractListingInfo } from '@/ai/flows/extract-listing-info-flow';
 import { Loader2 } from 'lucide-react';
 
@@ -63,11 +63,11 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
       const extractedData = await extractListingInfo({ url: data.url });
 
       const listingsCollection = collection(firestore, `sessions/${sessionId}/listings`);
-      addDocumentNonBlocking(listingsCollection, { 
-        ...data, 
+      addDocumentNonBlocking(listingsCollection, {
+        ...data,
         ...extractedData,
-        sessionId, 
-        creationDate: new Date().toISOString() 
+        sessionId,
+        creationDate: new Date().toISOString()
       });
       
       toast({
