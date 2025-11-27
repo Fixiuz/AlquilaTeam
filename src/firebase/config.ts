@@ -1,13 +1,14 @@
-// This configuration is used to initialize the Firebase app.
-// IMPORTANT: Replace the placeholder values with your actual
-// Firebase project's configuration.
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID",
+  apiKey: "AIzaSyDNklxn4IakD52-J2re78p8yrvsqr8dgVw",
+  authDomain: "studio-4799479286-2493d.firebaseapp.com",
+  projectId: "studio-4799479286-2493d",
+  storageBucket: "studio-4799479286-2493d.firebasestorage.app",
+  messagingSenderId: "582353989118",
+  appId: "1:582353989118:web:815643a9fbf1dedf7e64af"
 };
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
