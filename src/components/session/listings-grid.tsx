@@ -66,9 +66,6 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {listings.map((listing) => (
                 <Card key={listing.id} className="flex flex-col overflow-hidden">
-                    <div className="aspect-video bg-secondary flex items-center justify-center">
-                        <p className="text-muted-foreground text-sm">Sin imagen</p>
-                    </div>
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <CardTitle className="text-lg flex-1 pr-2">
