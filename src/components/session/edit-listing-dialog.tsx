@@ -26,8 +26,8 @@ const listingSchema = z.object({
   expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional(),
   agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional(),
   deposit: z.string().optional(),
-  adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral']).optional(),
-  adjustmentIndex: z.enum(['IPC', 'ICL']).optional(),
+  adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral', 'desconocido']).optional(),
+  adjustmentIndex: z.enum(['IPC', 'ICL', 'desconocido']).optional(),
 });
 
 type ListingFormValues = z.infer<typeof listingSchema>;
@@ -39,8 +39,8 @@ interface Listing {
     expenses?: number;
     agencyFee?: number;
     deposit?: string;
-    adjustmentFrequency?: 'trimestral' | 'cuatrimestral' | 'semestral';
-    adjustmentIndex?: 'IPC' | 'ICL';
+    adjustmentFrequency?: 'trimestral' | 'cuatrimestral' | 'semestral' | 'desconocido';
+    adjustmentIndex?: 'IPC' | 'ICL' | 'desconocido';
 }
 
 interface EditListingDialogProps {
@@ -61,8 +61,8 @@ export function EditListingDialog({ listing, isOpen, onOpenChange }: EditListing
       expenses: listing.expenses || 0,
       agencyFee: listing.agencyFee || 0,
       deposit: listing.deposit || '',
-      adjustmentFrequency: listing.adjustmentFrequency,
-      adjustmentIndex: listing.adjustmentIndex
+      adjustmentFrequency: listing.adjustmentFrequency || 'desconocido',
+      adjustmentIndex: listing.adjustmentIndex || 'desconocido'
     },
   });
 
@@ -73,8 +73,8 @@ export function EditListingDialog({ listing, isOpen, onOpenChange }: EditListing
       expenses: listing.expenses || 0,
       agencyFee: listing.agencyFee || 0,
       deposit: listing.deposit || '',
-      adjustmentFrequency: listing.adjustmentFrequency,
-      adjustmentIndex: listing.adjustmentIndex
+      adjustmentFrequency: listing.adjustmentFrequency || 'desconocido',
+      adjustmentIndex: listing.adjustmentIndex || 'desconocido'
     });
   }, [listing, form]);
 
@@ -183,6 +183,7 @@ export function EditListingDialog({ listing, isOpen, onOpenChange }: EditListing
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="desconocido">Desconocido</SelectItem>
                         <SelectItem value="trimestral">Trimestral</SelectItem>
                         <SelectItem value="cuatrimestral">Cuatrimestral</SelectItem>
                         <SelectItem value="semestral">Semestral</SelectItem>
@@ -205,6 +206,7 @@ export function EditListingDialog({ listing, isOpen, onOpenChange }: EditListing
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="desconocido">Desconocido</SelectItem>
                         <SelectItem value="ICL">ICL</SelectItem>
                         <SelectItem value="IPC">IPC</SelectItem>
                       </SelectContent>

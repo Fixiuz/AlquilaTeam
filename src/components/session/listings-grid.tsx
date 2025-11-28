@@ -21,8 +21,8 @@ interface Listing {
     expenses?: number;
     agencyFee?: number;
     deposit?: string;
-    adjustmentFrequency?: 'trimestral' | 'cuatrimestral' | 'semestral';
-    adjustmentIndex?: 'IPC' | 'ICL';
+    adjustmentFrequency?: 'trimestral' | 'cuatrimestral' | 'semestral' | 'desconocido';
+    adjustmentIndex?: 'IPC' | 'ICL' | 'desconocido';
 }
 
 interface ListingsGridProps {
@@ -84,8 +84,8 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                         </div>
                         <CardDescription>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 flex-wrap">
-                               {listing.adjustmentFrequency && <span>Ajuste: <Badge variant="outline">{listing.adjustmentFrequency}</Badge></span>}
-                               {listing.adjustmentIndex && <span>Índice: <Badge variant="outline">{listing.adjustmentIndex}</Badge></span>}
+                               {listing.adjustmentFrequency && listing.adjustmentFrequency !== 'desconocido' && <span>Ajuste: <Badge variant="outline">{listing.adjustmentFrequency}</Badge></span>}
+                               {listing.adjustmentIndex && listing.adjustmentIndex !== 'desconocido' && <span>Índice: <Badge variant="outline">{listing.adjustmentIndex}</Badge></span>}
                                {listing.deposit && <span>Depósito: <Badge variant="outline">{listing.deposit}</Badge></span>}
                                {listing.agencyFee > 0 && <span>Inmobiliaria: <Badge variant="outline">${listing.agencyFee.toLocaleString('es-AR')}</Badge></span>}
                             </div>

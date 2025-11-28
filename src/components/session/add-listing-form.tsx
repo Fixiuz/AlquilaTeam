@@ -26,8 +26,8 @@ const listingSchema = z.object({
   expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional(),
   agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional(),
   deposit: z.string().optional(),
-  adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral']).optional(),
-  adjustmentIndex: z.enum(['IPC', 'ICL']).optional(),
+  adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral', 'desconocido']).optional(),
+  adjustmentIndex: z.enum(['IPC', 'ICL', 'desconocido']).optional(),
 });
 
 type ListingFormValues = z.infer<typeof listingSchema>;
@@ -48,6 +48,8 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
       expenses: 0,
       agencyFee: 0,
       deposit: '',
+      adjustmentFrequency: 'desconocido',
+      adjustmentIndex: 'desconocido',
     },
   });
 
@@ -156,6 +158,7 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="desconocido">Desconocido</SelectItem>
                         <SelectItem value="trimestral">Trimestral</SelectItem>
                         <SelectItem value="cuatrimestral">Cuatrimestral</SelectItem>
                         <SelectItem value="semestral">Semestral</SelectItem>
@@ -178,6 +181,7 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="desconocido">Desconocido</SelectItem>
                         <SelectItem value="ICL">ICL</SelectItem>
                         <SelectItem value="IPC">IPC</SelectItem>
                       </SelectContent>
