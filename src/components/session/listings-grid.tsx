@@ -87,17 +87,17 @@ export function ListingsGrid({ listings, isLoading }: ListingsGridProps) {
                                {listing.adjustmentFrequency && listing.adjustmentFrequency !== 'desconocido' && <span>Ajuste: <Badge variant="outline">{listing.adjustmentFrequency}</Badge></span>}
                                {listing.adjustmentIndex && listing.adjustmentIndex !== 'desconocido' && <span>Índice: <Badge variant="outline">{listing.adjustmentIndex}</Badge></span>}
                                {listing.deposit && <span>Depósito: <Badge variant="outline">{listing.deposit}</Badge></span>}
-                               {listing.agencyFee > 0 && <span>Inmobiliaria: <Badge variant="outline">${listing.agencyFee.toLocaleString('es-AR')}</Badge></span>}
+                               {listing.agencyFee && listing.agencyFee > 0 && <span>Inmobiliaria: <Badge variant="outline">${listing.agencyFee.toLocaleString('es-AR')}</Badge></span>}
                             </div>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow">
                         <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-2xl font-bold">${(listing.rent + (listing.expenses || 0)).toLocaleString('es-AR')}</p>
+                                <p className="text-2xl font-bold">${((listing.rent ?? 0) + (listing.expenses ?? 0)).toLocaleString('es-AR')}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Alquiler: ${listing.rent.toLocaleString('es-AR')}
-                                    {listing.expenses > 0 ? ` + Expensas: $${listing.expenses.toLocaleString('es-AR')}`: ''}
+                                    Alquiler: ${listing.rent?.toLocaleString('es-AR') ?? '...'}
+                                    {(listing.expenses ?? 0) > 0 ? ` + Exp: $${listing.expenses?.toLocaleString('es-AR')}`: ''}
                                 </p>
                             </div>
                             <Badge variant="secondary">Total Mensual</Badge>

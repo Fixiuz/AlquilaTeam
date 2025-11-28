@@ -23,8 +23,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 const listingSchema = z.object({
   url: z.string().url({ message: 'Por favor, ingresá una URL válida.' }),
   rent: z.coerce.number().positive({ message: 'El alquiler debe ser un número positivo.' }),
-  expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional(),
-  agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional(),
+  expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional().or(z.literal('')),
+  agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional().or(z.literal('')),
   deposit: z.string().optional(),
   adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral', 'desconocido']).optional(),
   adjustmentIndex: z.enum(['IPC', 'ICL', 'desconocido']).optional(),
@@ -45,8 +45,8 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
     defaultValues: {
       url: '',
       rent: 0,
-      expenses: 0,
-      agencyFee: 0,
+      expenses: '',
+      agencyFee: '',
       deposit: '',
       adjustmentFrequency: 'desconocido',
       adjustmentIndex: 'desconocido',
@@ -56,8 +56,16 @@ export function AddListingForm({ sessionId }: AddListingFormProps) {
   const onSubmit = (data: ListingFormValues) => {
     if (!firestore) return;
 
+    const payload = {
+        ...data,
+        expenses: data.expenses === '' ? undefined : Number(data.expenses),
+        agencyFee: data.agencyFee === '' ? undefined : Number(data.agencyFee),
+        sessionId,
+        creationDate: new Date().toISOString()
+    };
+
     const listingsCollection = collection(firestore, `sessions/${sessionId}/listings`);
-    addDocumentNonBlocking(listingsCollection, { ...data, sessionId, creationDate: new Date().toISOString() });
+    addDocumentNonBlocking(listingsCollection, payload);
     
     toast({
       title: "Propiedad agregada!",

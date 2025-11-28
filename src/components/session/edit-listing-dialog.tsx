@@ -23,8 +23,8 @@ import { useEffect } from 'react';
 const listingSchema = z.object({
   url: z.string().url({ message: 'Por favor, ingresá una URL válida.' }),
   rent: z.coerce.number().positive({ message: 'El alquiler debe ser un número positivo.' }),
-  expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional(),
-  agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional(),
+  expenses: z.coerce.number().min(0, { message: 'Las expensas no pueden ser negativas.' }).optional().or(z.literal('')),
+  agencyFee: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }).optional().or(z.literal('')),
   deposit: z.string().optional(),
   adjustmentFrequency: z.enum(['trimestral', 'cuatrimestral', 'semestral', 'desconocido']).optional(),
   adjustmentIndex: z.enum(['IPC', 'ICL', 'desconocido']).optional(),
@@ -55,34 +55,32 @@ export function EditListingDialog({ listing, isOpen, onOpenChange }: EditListing
 
   const form = useForm<ListingFormValues>({
     resolver: zodResolver(listingSchema),
-    defaultValues: {
-      url: listing.url || '',
-      rent: listing.rent || 0,
-      expenses: listing.expenses || 0,
-      agencyFee: listing.agencyFee || 0,
-      deposit: listing.deposit || '',
-      adjustmentFrequency: listing.adjustmentFrequency || 'desconocido',
-      adjustmentIndex: listing.adjustmentIndex || 'desconocido'
-    },
   });
 
   useEffect(() => {
-    form.reset({
-      url: listing.url || '',
-      rent: listing.rent || 0,
-      expenses: listing.expenses || 0,
-      agencyFee: listing.agencyFee || 0,
-      deposit: listing.deposit || '',
-      adjustmentFrequency: listing.adjustmentFrequency || 'desconocido',
-      adjustmentIndex: listing.adjustmentIndex || 'desconocido'
-    });
-  }, [listing, form]);
+    if (isOpen) {
+        form.reset({
+          url: listing.url || '',
+          rent: listing.rent || 0,
+          expenses: listing.expenses ?? '',
+          agencyFee: listing.agencyFee ?? '',
+          deposit: listing.deposit || '',
+          adjustmentFrequency: listing.adjustmentFrequency || 'desconocido',
+          adjustmentIndex: listing.adjustmentIndex || 'desconocido'
+        });
+    }
+  }, [listing, form, isOpen]);
 
   const onSubmit = (data: ListingFormValues) => {
     if (!firestore) return;
 
     const listingRef = doc(firestore, `sessions/${listing.sessionId}/listings`, listing.id);
-    updateDocumentNonBlocking(listingRef, data);
+    const payload = {
+        ...data,
+        expenses: data.expenses === '' ? undefined : Number(data.expenses),
+        agencyFee: data.agencyFee === '' ? undefined : Number(data.agencyFee),
+    };
+    updateDocumentNonBlocking(listingRef, payload);
     
     toast({
       title: "Propiedad actualizada!",
